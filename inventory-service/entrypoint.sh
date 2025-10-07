@@ -7,7 +7,7 @@ if [ -z "$DATABASE_URL" ]; then
 fi
 
 echo "[goose] perfoming migration"
-goose -dir /app/migrations postgres "$DATABASE_URL" up
+goose -dir /app/db/migrations postgres "$DATABASE_URL" up
 
 echo "[inventory] starting service (http:${HTTP_ADDRESS}, grpc:${GRPC_ADDRESS})..."
 exec /usr/local/bin/inventory

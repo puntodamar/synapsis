@@ -2,3 +2,4 @@
 .DS_Store
 order-service/tmp
 inventory-service/tmp
+inventory-service/bin

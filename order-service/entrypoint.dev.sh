@@ -7,7 +7,7 @@ go mod download
 
 if [ -n "$DATABASE_URL" ]; then
   echo "[goose] dev migrations…"
-  goose -dir ./migrations postgres "$DATABASE_URL" up || true
+  goose -dir ./db/migrations postgres "$DATABASE_URL" up || true
 fi
 
 echo "[order] starting service (http:${HTTP_ADDRESS})…"

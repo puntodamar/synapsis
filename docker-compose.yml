@@ -72,6 +72,7 @@ services:
       GOPROXY: https://proxy.golang.org,direct
       GOPRIVATE: github.com/synapsis/*
       GOTOOLCHAIN: auto
+      RUN_SEEDS: true
     depends_on: [inventory-db, nats]
     ports: ["8082:8080", "50051:50051"]
     volumes:

@@ -1,0 +1,5 @@
+[
+  { "sku": "SKU-001", "name": "Wireless Mouse", "stock": 100 },
+  { "sku": "SKU-002", "name": "Mechanical Keyboard", "stock": 50 },
+  { "sku": "SKU-003", "name": "27-inch Monitor", "stock": 0 }
+]

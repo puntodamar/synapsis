@@ -27,7 +27,7 @@ RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY --from=build /workspace/bin/inventory /usr/local/bin/inventory
 COPY --from=build /go/bin/goose /usr/local/bin/goose
-COPY inventory-service/migrations ./migrations
+COPY inventory-service/db ./db
 COPY inventory-service/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

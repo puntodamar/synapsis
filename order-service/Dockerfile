@@ -26,7 +26,7 @@ RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY --from=build /workspace/bin/order /usr/local/bin/order
 COPY --from=build /go/bin/goose /usr/local/bin/goose
-COPY order-service/migrations ./migrations
+COPY order-service/db ./db
 
 COPY order-service/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh

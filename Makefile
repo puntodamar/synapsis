@@ -20,12 +20,6 @@ down:
 logs:
 	docker compose logs -f --tail=200
 
-#prod:
-#	TARGET=release docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
-#
-#prod-d:
-#	TARGET=release docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
-
 .PHONY: restart
 restart:
 	docker compose restart (ORDER_SERVICE) (INVENTORY_SERVICE)
@@ -33,23 +27,6 @@ restart:
 .PHONY: build
 build:
 	$(COMPOSE) build
-
-
-.PHONY: migrate-order
-migrate-order:
-	$(COMPOSE) run --rm $(ORDER_SERVICE) goose -dir ./migrations postgres "$$DATABASE_URL" up
-
-.PHONY: migrate-inventory
-migrate-inventory: 
-	$(COMPOSE) run --rm $(INVENTORY_SERVICE) goose -dir ./migrations postgres "$$DATABASE_URL" up
-
-.PHONY: migrate-order-down
-migrate-order-down:
-	$(COMPOSE) run --rm $(ORDER_SERVICE) goose -dir ./migrations postgres "$$DATABASE_URL" down
-
-.PHONY: migrate-inventory-down
-migrate-inventory-down:
-	$(COMPOSE) run --rm $(INVENTORY_SERVICE) goose -dir ./migrations postgres "$$DATABASE_URL" down
 
 .PHONY: tidy
 tidy:

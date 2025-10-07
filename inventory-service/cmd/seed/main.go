@@ -1,12 +1,13 @@
+// services/inventory-service/cmd/migrate/main.go
 package main
 
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/synapsis/common/config"
+	_ "github.com/synapsis/inventory-service/db/seeds"
 	"log"
 )
 
@@ -23,10 +24,8 @@ func main() {
 	}
 
 	ctx := context.Background()
-
 	if err := goose.UpContext(ctx, db, "db/seeds"); err != nil {
-		log.Fatal("seeds failed:", err)
+		log.Fatal("seeding failed:", err)
 	}
-	log.Println("seeds applied successfully")
-	fmt.Printf("Starting inventory service at %s\n", cfg.HTTPAddress)
+	log.Println("seeding applied successfully")
 }
