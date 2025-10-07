@@ -1,42 +1,44 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
+	recovermw "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/synapsis/common/config"
-	"time"
+	"github.com/synapsis/order-service/domain"
+	"github.com/synapsis/order-service/repo"
+	"github.com/synapsis/order-service/transport/http"
+	"github.com/synapsis/order-service/transport/http/middleware"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: middleware.ErrorHandler,
+	})
+
+	app.Use(recovermw.New(recovermw.Config{EnableStackTrace: true}))
+
 	cfg := config.FromEnv()
 
-	app.Get("/test", func(c *fiber.Ctx) error {
+	gdb, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app.Get("/healthcheck", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON("ok")
 	})
 
-	app.Post("/orders", func(c *fiber.Ctx) error {
-		var body struct {
-			CustomerID string `json:"customer_id"`
-			Items      []struct {
-				SKU string `json:"sku"`
-				Qty int    `json:"qty"`
-			} `json:"items"`
-		}
+	orderRepo := repo.NewOrderGormRepo(gdb)
+	service := domain.NewService(orderRepo)
 
-		if err := c.BodyParser(&body); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "invalid request body",
-			})
-		}
+	h := http.NewHandler(service)
+	http.Router(app, h)
 
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message":     "Order received successfully",
-			"customer_id": body.CustomerID,
-			"order_id":    fmt.Sprintf("order-%d", time.Now().Unix()),
-			"status":      "CONFIRMED",
-		})
-	})
-
-	app.Listen(cfg.HTTPAddress)
+	err = app.Listen(cfg.HTTPAddress)
+	if err != nil {
+		return
+	}
 }
