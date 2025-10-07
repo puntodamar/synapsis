@@ -1,0 +1,90 @@
+version: "3.9"
+
+services:
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js"]
+    ports: ["4222:4222", "8222:8222"]
+
+  order-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: order
+      POSTGRES_PASSWORD: order
+      POSTGRES_DB: order
+    ports: ["5434:5432"]
+    volumes:
+      - order_data:/var/lib/postgresql/data
+
+  inventory-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: inventory
+      POSTGRES_PASSWORD: inventory
+      POSTGRES_DB: inventory
+    ports: ["5435:5432"]
+    volumes:
+      - inventory_data:/var/lib/postgresql/data
+
+  order-service:
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile
+      target: ${TARGET:-dev}
+    working_dir: /workspace/order-service
+    command: /usr/local/bin/entrypoint.dev.sh
+    environment:
+      APP_ENV: docker
+      HTTP_ADDRESS: 0.0.0.0:8080
+      GRPC_INVENTORY_ADDRESS: inventory-service:50051
+      DATABASE_URL: postgres://order:order@order-db:5432/order?sslmode=disable
+      NATS_URL: nats://nats:4222
+#      GOWORK: /workspace/go
+#      GOWORK: /workspace/go
+      GOPROXY: https://proxy.golang.org,direct
+      GOPRIVATE: github.com/synapsis/*
+      GOTOOLCHAIN: auto
+    depends_on: [order-db, nats, inventory-service]
+    ports: ["8081:8080"]
+    volumes:
+#      - .:/workspace
+      - ./order-service:/workspace/order-service
+      - ./common:/workspace/common
+#      - ./go.work:/workspace/go.work
+      - gocache:/go/pkg/mod
+      - gobuild-order:/root/.cache/go-build
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: inventory-service/Dockerfile
+      target: ${TARGET:-dev}
+    working_dir: /workspace/inventory-service
+    command: /usr/local/bin/entrypoint.dev.sh
+    environment:
+      APP_ENV: docker
+      HTTP_ADDRESS: 0.0.0.0:8080
+      GRPC_ADDRESS: 0.0.0.0:50051
+      DATABASE_URL: postgres://inventory:inventory@inventory-db:5432/inventory?sslmode=disable
+      NATS_URL: nats://nats:4222
+##      GOWORK: /workspace/go
+#      GOWORK: /workspace/go
+      GOPROXY: https://proxy.golang.org,direct
+      GOPRIVATE: github.com/synapsis/*
+      GOTOOLCHAIN: auto
+    depends_on: [inventory-db, nats]
+    ports: ["8082:8080", "50051:50051"]
+    volumes:
+#      - .:/workspace
+      - ./inventory-service:/workspace/inventory-service
+      - ./common:/workspace/common
+      - gocache:/go/pkg/mod
+#      - ./go.work:/workspace/go.work
+      - gobuild-inventory:/root/.cache/go-build
+
+volumes:
+  order_data:
+  inventory_data:
+  gocache:
+  gobuild-order:
+  gobuild-inventory:
